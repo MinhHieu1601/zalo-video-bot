@@ -57,7 +57,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Lệnh /start - Menu chính"""
     keyboard = [
         [InlineKeyboardButton("📤 Upload Video Zalo", callback_data="upvideo")],
-        [InlineKeyboardButton("📥 Download Video", callback_data="download")],
         [InlineKeyboardButton("👤 Quản lý Account", callback_data="accounts")],
         [InlineKeyboardButton("📋 Xem Jobs", callback_data="jobs")],
     ]
@@ -445,43 +444,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text = "\n".join(lines)
         await query.message.reply_text(text, parse_mode="Markdown")
     
-    elif query.data == "download":
-        await query.message.reply_text("📎 Gửi link video Douyin/TikTok/Facebook:")
-
-# ==================== DOWNLOAD VIDEO (giữ từ code cũ) ====================
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xử lý message thường - download video"""
-    text = update.message.text
-    url = extract_url(text)
-    
-    if not url:
-        return
-    
-    processing_msg = await update.message.reply_text("⏳ Đang xử lý...")
-    
-    try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.get(f"{API_URL}?key={API_KEY}&url={url}")
-            data = resp.json()
-        
-        if not data.get("success"):
-            await processing_msg.edit_text(f"❌ Lỗi: {data.get('error', 'Unknown error')}")
-            return
-        
-        video_url = data.get("video_url")
-        title = data.get("title", "")
-        
-        await processing_msg.delete()
-        await update.message.reply_video(
-            video=video_url,
-            caption=title[:1024],
-            supports_streaming=True
-        )
-        
-    except Exception as e:
-        await processing_msg.edit_text(f"❌ Lỗi: {str(e)}")
-
 # ==================== MAIN ====================
 
 def create_bot_application():
@@ -523,7 +485,6 @@ def create_bot_application():
     app.add_handler(CommandHandler("accounts", accounts_list))
     app.add_handler(CommandHandler("jobs", jobs_list))
     app.add_handler(CallbackQueryHandler(button_callback))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     return app
 
