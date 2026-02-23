@@ -218,6 +218,20 @@ def upload_video_to_zalo(
     except Exception as e:
         error_msg = str(e)
         print(f"❌ Lỗi: {error_msg}")
+        
+        # Chụp screenshot để debug
+        if driver:
+            try:
+                screenshot_path = f"/tmp/error_{int(time.time())}.png"
+                driver.save_screenshot(screenshot_path)
+                print(f"📸 Đã chụp screenshot: {screenshot_path}")
+                
+                # Log page source
+                print(f"📄 Page URL: {driver.current_url}")
+                print(f"📄 Page title: {driver.title}")
+            except:
+                pass
+        
         return False, error_msg
         
     finally:

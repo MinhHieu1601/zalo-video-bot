@@ -12,8 +12,10 @@ import database as db
 from video_downloader import download_from_share_url, cleanup_old_videos
 from zalo_uploader import upload_video_to_zalo
 
+import os
+
 # Telegram bot để gửi thông báo
-BOT_TOKEN = "8064862449:AAFizHK73KR_6K3xXB5byeA62Zd-dDr97qM"
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8636525026:AAHrvCkUnWKJ5C3GlrcD_u87eRUy270b_IE")
 
 async def send_telegram_notification(user_id: int, message: str):
     """Gửi thông báo qua Telegram"""
