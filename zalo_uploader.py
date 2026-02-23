@@ -8,23 +8,24 @@ import time
 import os
 from pathlib import Path
 
-# Thử dùng undetected-chromedriver trước
-try:
-    import undetected_chromedriver as uc
-    USE_UNDETECTED = True
-    print("✅ Sử dụng undetected-chromedriver")
-except ImportError:
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    USE_UNDETECTED = False
-    print("⚠️ Không có undetected-chromedriver, dùng selenium thường")
-
+# Import selenium cơ bản
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+
+# Thử dùng undetected-chromedriver
+try:
+    import undetected_chromedriver as uc
+    USE_UNDETECTED = True
+    print("✅ Sử dụng undetected-chromedriver")
+except ImportError:
+    USE_UNDETECTED = False
+    print("⚠️ Không có undetected-chromedriver, dùng selenium thường")
 
 # Thư mục lưu Chrome user data
 USER_DATA_BASE = Path(__file__).parent / "chrome_profiles"
