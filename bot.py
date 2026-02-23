@@ -17,7 +17,7 @@ import database as db
 from video_downloader import get_video_info
 
 # Bot settings
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8064862449:AAFizHK73KR_6K3xXB5byeA62Zd-dDr97qM")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8636525026:AAHrvCkUnWKJ5C3GlrcD_u87eRUy270b_IE")
 API_URL = "https://douyin-api-vercel.vercel.app/api"
 API_KEY = "hieudepzainhatvutru1601"
 
