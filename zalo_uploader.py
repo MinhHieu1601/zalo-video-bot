@@ -105,36 +105,49 @@ def upload_video_to_zalo(
         (success, message)
     """
     driver = None
+    current_step = "init"
     try:
         # Kiểm tra file video tồn tại
+        current_step = "check_video_file"
+        print(f"📝 Bước: {current_step}")
         if not os.path.exists(video_path):
             return False, f"File video không tồn tại: {video_path}"
+        print(f"✅ File video tồn tại: {video_path}")
         
         # Khởi tạo driver
+        current_step = "init_driver"
+        print(f"📝 Bước: {current_step}")
         options = get_chrome_options(headless)
         driver = webdriver.Chrome(options=options)
         wait = WebDriverWait(driver, 30)
+        print("✅ Đã khởi tạo Chrome driver")
         
         # Mở trang Zalo Video
+        current_step = "open_zalo_video"
+        print(f"📝 Bước: {current_step}")
         driver.get("https://video.zalo.me/")
-        time.sleep(2)
+        time.sleep(3)
+        print(f"✅ Đã mở trang - URL: {driver.current_url}")
+        print(f"📄 Title: {driver.title}")
         
         # Kiểm tra cần đăng nhập không
-        try:
-            login_btn = driver.find_element(By.CSS_SELECTOR, "button.styles_login-btn__3HqY4")
-            if login_btn:
-                print("⚠️ Chưa đăng nhập, đang import cookie...")
-                imported = import_cookies(driver, cookies_json)
-                print(f"✅ Đã import {imported} cookies")
-                
-                # Truy cập lại
-                driver.get("https://video.zalo.me/")
-                time.sleep(3)
-        except:
-            print("✅ Đã đăng nhập sẵn")
+        current_step = "check_login"
+        print(f"📝 Bước: {current_step}")
+        
+        # Import cookie trước
+        print("⏳ Đang import cookies...")
+        imported = import_cookies(driver, cookies_json)
+        print(f"✅ Đã import {imported} cookies")
+        
+        # Refresh trang sau khi import cookie
+        driver.get("https://video.zalo.me/")
+        time.sleep(3)
+        print(f"✅ Đã refresh trang - URL: {driver.current_url}")
+        print(f"📄 Title: {driver.title}")
         
         # Click nút "Đăng video"
-        print("⏳ Đang chờ nút 'Đăng video'...")
+        current_step = "click_dang_video_btn"
+        print(f"📝 Bước: {current_step}")
         btn_dang_video = wait.until(
             EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'ant-btn-primary')]//span[text()='Đăng video']/parent::button"))
         )
@@ -142,16 +155,18 @@ def upload_video_to_zalo(
         print("✅ Đã click nút 'Đăng video'")
         
         # Chờ modal và upload video
+        current_step = "upload_video_file"
+        print(f"📝 Bước: {current_step}")
         time.sleep(2)
-        print(f"⏳ Đang upload video: {video_path}")
         
         file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][accept*='video']")
         file_input.send_keys(video_path)
-        print("✅ Đã chọn video, đang upload...")
+        print(f"✅ Đã chọn video: {video_path}")
         
         # Chờ video xử lý
-        print("⏳ Đang chờ video xử lý...")
-        time.sleep(10)  # Tăng thời gian chờ cho headless
+        current_step = "wait_video_processing"
+        print(f"📝 Bước: {current_step} - chờ 15s...")
+        time.sleep(15)  # Tăng thời gian chờ
         
         # Điền caption nếu có
         if caption:
@@ -216,21 +231,19 @@ def upload_video_to_zalo(
         return True, "Upload thành công!"
         
     except Exception as e:
-        error_msg = str(e)
-        print(f"❌ Lỗi: {error_msg}")
+        error_msg = f"[{current_step}] {str(e)[:200]}"
+        print(f"❌ Lỗi tại bước '{current_step}': {str(e)}")
         
         # Chụp screenshot để debug
         if driver:
             try:
-                screenshot_path = f"/tmp/error_{int(time.time())}.png"
+                screenshot_path = f"/tmp/error_{current_step}_{int(time.time())}.png"
                 driver.save_screenshot(screenshot_path)
                 print(f"📸 Đã chụp screenshot: {screenshot_path}")
-                
-                # Log page source
                 print(f"📄 Page URL: {driver.current_url}")
                 print(f"📄 Page title: {driver.title}")
-            except:
-                pass
+            except Exception as ss_err:
+                print(f"⚠️ Không chụp được screenshot: {ss_err}")
         
         return False, error_msg
         
