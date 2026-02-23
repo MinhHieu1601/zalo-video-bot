@@ -8,10 +8,10 @@ from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from contextlib import contextmanager
 
-# Database URL từ Supabase
+# Database URL từ Supabase (sử dụng Pooler connection cho IPv4 compatibility)
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:hieuminh123%40@db.bexsrcaznrzvqxzevhdn.supabase.co:5432/postgres"
+    "postgresql://postgres.bexsrcaznrzvqxzevhdn:hieuminh123%40@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres"
 )
 
 @contextmanager
