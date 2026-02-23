@@ -68,6 +68,14 @@ async def process_job(job: dict):
             db.update_job_status(job_id, 'completed')
             print(f"✅ Job #{job_id} hoàn thành!")
             
+            # Xóa video sau khi upload xong
+            try:
+                if video_path and os.path.exists(video_path):
+                    os.remove(video_path)
+                    print(f"🗑️ Đã xóa video: {video_path}")
+            except Exception as del_err:
+                print(f"⚠️ Không xóa được video: {del_err}")
+            
             # Gửi thông báo
             await send_telegram_notification(
                 job['telegram_user_id'],

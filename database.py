@@ -3,21 +3,32 @@ Kết nối PostgreSQL (Supabase) - CRUD cho zalo_accounts và upload_jobs
 """
 
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from contextlib import contextmanager
+
+# Tương thích cả psycopg2 và psycopg (v3)
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    USE_PSYCOPG3 = False
+except ImportError:
+    import psycopg
+    from psycopg.rows import dict_row
+    USE_PSYCOPG3 = True
 
 # Database URL từ Supabase (sử dụng Pooler connection cho IPv4 compatibility)
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres.bexsrcaznrzvqxzevhdn:hieuminh123%40@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres"
+    "postgresql://postgres.bexsrcaznrzvqxzevhdn:hieuminh123%40@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres"
 )
 
 @contextmanager
 def get_connection():
     """Context manager cho database connection"""
-    conn = psycopg2.connect(DATABASE_URL)
+    if USE_PSYCOPG3:
+        conn = psycopg.connect(DATABASE_URL)
+    else:
+        conn = psycopg2.connect(DATABASE_URL)
     try:
         yield conn
         conn.commit()
@@ -74,16 +85,26 @@ def add_zalo_account(name: str, cookies: str) -> int:
 def get_all_accounts() -> list:
     """Lấy danh sách tất cả tài khoản Zalo"""
     with get_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT id, name, created_at FROM zalo_accounts ORDER BY id")
-            return cur.fetchall()
+        if USE_PSYCOPG3:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute("SELECT id, name, created_at FROM zalo_accounts ORDER BY id")
+                return cur.fetchall()
+        else:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT id, name, created_at FROM zalo_accounts ORDER BY id")
+                return cur.fetchall()
 
 def get_account_by_id(account_id: int) -> dict | None:
     """Lấy thông tin tài khoản theo ID"""
     with get_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("SELECT * FROM zalo_accounts WHERE id = %s", (account_id,))
-            return cur.fetchone()
+        if USE_PSYCOPG3:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute("SELECT * FROM zalo_accounts WHERE id = %s", (account_id,))
+                return cur.fetchone()
+        else:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM zalo_accounts WHERE id = %s", (account_id,))
+                return cur.fetchone()
 
 def delete_account(account_id: int) -> bool:
     """Xóa tài khoản Zalo"""
@@ -118,37 +139,44 @@ def create_job(
 
 def get_pending_jobs() -> list:
     """Lấy danh sách jobs đang chờ xử lý (đã đến giờ hoặc đăng ngay)"""
+    query = """
+        SELECT j.*, a.name as account_name, a.cookies
+        FROM upload_jobs j
+        JOIN zalo_accounts a ON j.zalo_account_id = a.id
+        WHERE j.status = 'pending'
+        AND (j.schedule_time IS NULL OR j.schedule_time <= NOW())
+        ORDER BY j.created_at
+    """
     with get_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(
-                """
-                SELECT j.*, a.name as account_name, a.cookies
-                FROM upload_jobs j
-                JOIN zalo_accounts a ON j.zalo_account_id = a.id
-                WHERE j.status = 'pending'
-                AND (j.schedule_time IS NULL OR j.schedule_time <= NOW())
-                ORDER BY j.created_at
-                """
-            )
-            return cur.fetchall()
+        if USE_PSYCOPG3:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(query)
+                return cur.fetchall()
+        else:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(query)
+                return cur.fetchall()
 
 def get_jobs_by_user(telegram_user_id: int, limit: int = 10) -> list:
     """Lấy danh sách jobs của user"""
+    query = """
+        SELECT j.id, j.video_url, j.caption, j.schedule_time, j.status, 
+               j.created_at, a.name as account_name
+        FROM upload_jobs j
+        JOIN zalo_accounts a ON j.zalo_account_id = a.id
+        WHERE j.telegram_user_id = %s
+        ORDER BY j.created_at DESC
+        LIMIT %s
+    """
     with get_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute(
-                """
-                SELECT j.id, j.video_url, j.caption, j.schedule_time, j.status, 
-                       j.created_at, a.name as account_name
-                FROM upload_jobs j
-                JOIN zalo_accounts a ON j.zalo_account_id = a.id
-                WHERE j.telegram_user_id = %s
-                ORDER BY j.created_at DESC
-                LIMIT %s
-                """,
-                (telegram_user_id, limit)
-            )
-            return cur.fetchall()
+        if USE_PSYCOPG3:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(query, (telegram_user_id, limit))
+                return cur.fetchall()
+        else:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(query, (telegram_user_id, limit))
+                return cur.fetchall()
 
 def update_job_status(job_id: int, status: str, error_message: str | None = None):
     """Cập nhật trạng thái job"""
