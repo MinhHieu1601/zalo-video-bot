@@ -1,0 +1,15 @@
+# Telegram Bot
+python-telegram-bot==21.0
+
+# HTTP Client
+httpx==0.27.0
+
+# Database
+psycopg2-binary==2.9.9
+
+# Scheduler
+APScheduler==3.10.4
+
+# Selenium
+selenium==4.18.1
+webdriver-manager==4.0.1
