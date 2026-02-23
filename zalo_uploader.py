@@ -145,12 +145,47 @@ def upload_video_to_zalo(
         print(f"✅ Đã refresh trang - URL: {driver.current_url}")
         print(f"📄 Title: {driver.title}")
         
+        # Kiểm tra đã đăng nhập thành công chưa
+        current_step = "verify_login"
+        print(f"📝 Bước: {current_step}")
+        print(f"📄 Current URL: {driver.current_url}")
+        print(f"📄 Page title: {driver.title}")
+        
+        # Chờ trang load xong
+        time.sleep(3)
+        
         # Click nút "Đăng video"
         current_step = "click_dang_video_btn"
         print(f"📝 Bước: {current_step}")
-        btn_dang_video = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'ant-btn-primary')]//span[text()='Đăng video']/parent::button"))
-        )
+        print("⏳ Đang tìm nút 'Đăng video'...")
+        
+        # Thử nhiều selector
+        btn_dang_video = None
+        selectors = [
+            "//button[contains(@class, 'ant-btn-primary')]//span[text()='Đăng video']/parent::button",
+            "//button[contains(@class, 'ant-btn')]//span[contains(text(), 'Đăng video')]/parent::button",
+            "//button[contains(text(), 'Đăng video')]",
+            "//span[text()='Đăng video']/ancestor::button",
+        ]
+        
+        for i, selector in enumerate(selectors):
+            try:
+                print(f"   Thử selector {i+1}: {selector[:50]}...")
+                btn_dang_video = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable((By.XPATH, selector))
+                )
+                print(f"✅ Tìm thấy nút với selector {i+1}")
+                break
+            except:
+                print(f"   ❌ Không tìm thấy với selector {i+1}")
+                continue
+        
+        if not btn_dang_video:
+            # Log page source để debug
+            print("⚠️ Không tìm thấy nút 'Đăng video', kiểm tra page...")
+            print(f"📄 Page URL: {driver.current_url}")
+            raise Exception("Không tìm thấy nút 'Đăng video' - có thể cookie hết hạn hoặc trang chưa load")
+        
         btn_dang_video.click()
         print("✅ Đã click nút 'Đăng video'")
         
