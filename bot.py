@@ -77,7 +77,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ==================== UPLOAD VIDEO ====================
 
 async def upvideo_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Bắt đầu flow upload video"""
+    """Bắt đầu flow upload video (từ command /upvideo)"""
     # Kiểm tra có account nào chưa
     accounts = db.get_all_accounts()
     if not accounts:
@@ -90,6 +90,29 @@ async def upvideo_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data[update.effective_user.id] = {}
     
     await update.message.reply_text(
+        "📤 *UPLOAD VIDEO LÊN ZALO*\n\n"
+        "Bước 1/4: Gửi link video (Douyin/TikTok/Facebook):",
+        parse_mode="Markdown"
+    )
+    return UPVIDEO_LINK
+
+async def upvideo_start_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Bắt đầu flow upload video (từ inline button)"""
+    query = update.callback_query
+    await query.answer()
+    
+    # Kiểm tra có account nào chưa
+    accounts = db.get_all_accounts()
+    if not accounts:
+        await query.message.reply_text(
+            "❌ Chưa có tài khoản Zalo nào!\n\n"
+            "Dùng `/newprofile` để thêm tài khoản trước."
+        )
+        return ConversationHandler.END
+    
+    user_data[query.from_user.id] = {}
+    
+    await query.message.reply_text(
         "📤 *UPLOAD VIDEO LÊN ZALO*\n\n"
         "Bước 1/4: Gửi link video (Douyin/TikTok/Facebook):",
         parse_mode="Markdown"
@@ -399,13 +422,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
-    if query.data == "upvideo":
-        # Giả lập lệnh /upvideo
-        update.message = query.message
-        update._effective_user = query.from_user
-        return await upvideo_start(update, context)
-    
-    elif query.data == "accounts":
+    if query.data == "accounts":
         accounts = db.get_all_accounts()
         if not accounts:
             text = "📊 Chưa có tài khoản Zalo nào!\n\nDùng `/newprofile` để thêm."
@@ -473,7 +490,10 @@ def create_bot_application():
     
     # Conversation handler cho /upvideo
     upvideo_handler = ConversationHandler(
-        entry_points=[CommandHandler("upvideo", upvideo_start)],
+        entry_points=[
+            CommandHandler("upvideo", upvideo_start),
+            CallbackQueryHandler(upvideo_start_callback, pattern="^upvideo$"),
+        ],
         states={
             UPVIDEO_LINK: [MessageHandler(filters.TEXT & ~filters.COMMAND, upvideo_link)],
             UPVIDEO_CAPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, upvideo_caption)],
