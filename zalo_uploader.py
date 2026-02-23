@@ -183,22 +183,34 @@ def upload_video_to_zalo(
             ok_btn.click()
             print("✅ Đã chọn thời gian hẹn đăng")
         
-        # Click nút Đăng
-        print("⏳ Đang tìm nút 'Đăng'...")
-        time.sleep(2)
+        # Chờ video xử lý xong (kiểm tra progress bar)
+        print("⏳ Đang chờ video xử lý xong...")
+        time.sleep(5)
         
-        # Tìm nút Đăng (có thể là "Đăng" hoặc "Hẹn đăng")
+        # Click nút "Đăng video" cuối cùng
+        print("⏳ Đang tìm nút 'Đăng video'...")
+        
+        # Button có class: ant-btn ant-btn-primary bg-color-5 mt-6, text: "Đăng video"
         try:
-            submit_btn = driver.find_element(By.XPATH, "//button[contains(@class, 'ant-btn-primary')]//span[text()='Đăng' or text()='Hẹn đăng']/parent::button")
+            # Cách 1: Tìm theo class bg-color-5 và text "Đăng video"
+            submit_btn = wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'bg-color-5') and contains(@class, 'mt-6')]//span[text()='Đăng video']/parent::button"))
+            )
             submit_btn.click()
-            print("✅ Đã click nút Đăng")
+            print("✅ Đã click nút 'Đăng video'")
         except:
-            # Thử cách khác
-            submit_btn = driver.find_element(By.CSS_SELECTOR, "button.ant-btn-primary[type='button']")
-            submit_btn.click()
-            print("✅ Đã click nút Đăng (cách 2)")
+            try:
+                # Cách 2: Tìm theo text và class ant-btn-primary
+                submit_btn = driver.find_element(By.XPATH, "//button[contains(@class, 'ant-btn-primary')]//span[text()='Đăng video']/parent::button")
+                submit_btn.click()
+                print("✅ Đã click nút 'Đăng video' (cách 2)")
+            except:
+                # Cách 3: Tìm button primary cuối cùng trong form
+                submit_btn = driver.find_element(By.CSS_SELECTOR, "button.ant-btn-primary.bg-color-5")
+                submit_btn.click()
+                print("✅ Đã click nút 'Đăng video' (cách 3)")
         
-        # Chờ xác nhận
+        # Chờ xác nhận upload thành công
         time.sleep(5)
         
         return True, "Upload thành công!"
