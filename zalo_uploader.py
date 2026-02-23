@@ -1,13 +1,24 @@
 """
 Selenium script đăng video lên Zalo Video - Headless mode
+Sử dụng undetected-chromedriver để bypass bot detection
 """
 
 import json
 import time
 import os
 from pathlib import Path
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+
+# Thử dùng undetected-chromedriver trước
+try:
+    import undetected_chromedriver as uc
+    USE_UNDETECTED = True
+    print("✅ Sử dụng undetected-chromedriver")
+except ImportError:
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    USE_UNDETECTED = False
+    print("⚠️ Không có undetected-chromedriver, dùng selenium thường")
+
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -127,10 +138,32 @@ def upload_video_to_zalo(
         # Khởi tạo driver
         current_step = "init_driver"
         print(f"📝 Bước: {current_step}")
-        options = get_chrome_options(headless)
-        driver = webdriver.Chrome(options=options)
+        
+        if USE_UNDETECTED:
+            # Dùng undetected-chromedriver - bypass bot detection
+            chrome_options = uc.ChromeOptions()
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--window-size=1920,1080")
+            chrome_options.add_argument("--lang=vi-VN")
+            
+            if headless:
+                chrome_options.add_argument("--headless=new")
+            
+            # Cho Docker/Railway
+            if os.environ.get('CHROME_BIN'):
+                chrome_options.binary_location = os.environ.get('CHROME_BIN')
+            
+            driver = uc.Chrome(options=chrome_options, use_subprocess=True)
+            print("✅ Đã khởi tạo undetected-chromedriver")
+        else:
+            # Dùng selenium thường
+            options = get_chrome_options(headless)
+            driver = webdriver.Chrome(options=options)
+            print("✅ Đã khởi tạo Chrome driver (selenium)")
+        
         wait = WebDriverWait(driver, 30)
-        print("✅ Đã khởi tạo Chrome driver")
         
         # Mở trang Zalo Video
         current_step = "open_zalo_video"
