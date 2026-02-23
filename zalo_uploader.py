@@ -163,7 +163,7 @@ def upload_video_to_zalo(
         current_step = "open_zalo_video"
         print(f"📝 Bước: {current_step}")
         driver.get("https://video.zalo.me/")
-        time.sleep(3)
+        time.sleep(1)
         print(f"✅ Đã mở trang - URL: {driver.current_url}")
         print(f"📄 Title: {driver.title}")
         
@@ -178,7 +178,7 @@ def upload_video_to_zalo(
         
         # Refresh trang sau khi import cookie
         driver.get("https://video.zalo.me/")
-        time.sleep(3)
+        time.sleep(1)
         print(f"✅ Đã refresh trang - URL: {driver.current_url}")
         print(f"📄 Title: {driver.title}")
         
@@ -189,7 +189,7 @@ def upload_video_to_zalo(
         print(f"📄 Page title: {driver.title}")
         
         # Chờ trang load xong
-        time.sleep(3)
+        time.sleep(1)
         
         # Click nút "Đăng video"
         current_step = "click_dang_video_btn"
@@ -229,7 +229,7 @@ def upload_video_to_zalo(
         # Chờ modal và upload video
         current_step = "upload_video_file"
         print(f"📝 Bước: {current_step}")
-        time.sleep(2)
+        time.sleep(1)
         
         file_input = driver.find_element(By.CSS_SELECTOR, "input[type='file'][accept*='video']")
         file_input.send_keys(video_path)
@@ -237,8 +237,8 @@ def upload_video_to_zalo(
         
         # Chờ video xử lý
         current_step = "wait_video_processing"
-        print(f"📝 Bước: {current_step} - chờ 15s...")
-        time.sleep(15)  # Tăng thời gian chờ
+        print(f"📝 Bước: {current_step}")
+        time.sleep(5)  # Giảm thời gian chờ
         
         # Điền caption nếu có
         if caption:
@@ -270,9 +270,8 @@ def upload_video_to_zalo(
             ok_btn.click()
             print("✅ Đã chọn thời gian hẹn đăng")
         
-        # Chờ video xử lý xong (kiểm tra progress bar)
-        print("⏳ Đang chờ video xử lý xong...")
-        time.sleep(5)
+        # Chờ video xử lý xong
+        time.sleep(2)
         
         # Click nút "Đăng video" cuối cùng
         print("⏳ Đang tìm nút 'Đăng video'...")

@@ -157,6 +157,26 @@ def get_pending_jobs() -> list:
                 cur.execute(query)
                 return cur.fetchall()
 
+def get_all_jobs(limit: int = 50) -> list:
+    """Lay tat ca jobs"""
+    query = """
+        SELECT j.id, j.video_url, j.caption, j.schedule_time, j.status, 
+               j.created_at, a.name as account_name
+        FROM upload_jobs j
+        JOIN zalo_accounts a ON j.zalo_account_id = a.id
+        ORDER BY j.created_at DESC
+        LIMIT %s
+    """
+    with get_connection() as conn:
+        if USE_PSYCOPG3:
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(query, (limit,))
+                return cur.fetchall()
+        else:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(query, (limit,))
+                return cur.fetchall()
+
 def get_jobs_by_user(telegram_user_id: int, limit: int = 10) -> list:
     """Lấy danh sách jobs của user"""
     query = """
