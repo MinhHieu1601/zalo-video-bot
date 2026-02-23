@@ -16,8 +16,10 @@ from telegram.ext import (
 import database as db
 from video_downloader import get_video_info
 
-# Bot settings
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8490250001:AAES9o_v219rVEFQdeshfolSwCcUxhNOd54")
+# Bot settings - Lấy từ environment variable (không hardcode)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise ValueError("❌ Thiếu BOT_TOKEN! Set environment variable BOT_TOKEN")
 API_URL = "https://douyin-api-vercel.vercel.app/api"
 API_KEY = "hieudepzainhatvutru1601"
 
