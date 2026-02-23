@@ -15,7 +15,7 @@ from zalo_uploader import upload_video_to_zalo
 import os
 
 # Telegram bot để gửi thông báo
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8636525026:AAHrvCkUnWKJ5C3GlrcD_u87eRUy270b_IE")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8490250001:AAES9o_v219rVEFQdeshfolSwCcUxhNOd54")
 
 async def send_telegram_notification(user_id: int, message: str):
     """Gửi thông báo qua Telegram"""
