@@ -463,6 +463,7 @@ def create_bot_application():
             UPVIDEO_ACCOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, upvideo_account)],
         },
         fallbacks=[CommandHandler("cancel", upvideo_cancel)],
+        per_message=False,
     )
     
     # Conversation handler cho /newprofile
