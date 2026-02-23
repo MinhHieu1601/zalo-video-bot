@@ -18,14 +18,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
-# Thử dùng undetected-chromedriver
+# Thử dùng selenium-stealth
 try:
-    import undetected_chromedriver as uc
-    USE_UNDETECTED = True
-    print("✅ Sử dụng undetected-chromedriver")
+    from selenium_stealth import stealth
+    USE_STEALTH = True
+    print("✅ Sử dụng selenium-stealth")
 except ImportError:
-    USE_UNDETECTED = False
-    print("⚠️ Không có undetected-chromedriver, dùng selenium thường")
+    USE_STEALTH = False
+    print("⚠️ Không có selenium-stealth")
 
 # Thư mục lưu Chrome user data
 USER_DATA_BASE = Path(__file__).parent / "chrome_profiles"
@@ -140,29 +140,22 @@ def upload_video_to_zalo(
         current_step = "init_driver"
         print(f"📝 Bước: {current_step}")
         
-        if USE_UNDETECTED:
-            # Dùng undetected-chromedriver - bypass bot detection
-            chrome_options = uc.ChromeOptions()
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument("--window-size=1920,1080")
-            chrome_options.add_argument("--lang=vi-VN")
-            
-            if headless:
-                chrome_options.add_argument("--headless=new")
-            
-            # Cho Docker/Railway
-            if os.environ.get('CHROME_BIN'):
-                chrome_options.binary_location = os.environ.get('CHROME_BIN')
-            
-            driver = uc.Chrome(options=chrome_options, use_subprocess=True)
-            print("✅ Đã khởi tạo undetected-chromedriver")
-        else:
-            # Dùng selenium thường
-            options = get_chrome_options(headless)
-            driver = webdriver.Chrome(options=options)
-            print("✅ Đã khởi tạo Chrome driver (selenium)")
+        # Khởi tạo Chrome driver
+        options = get_chrome_options(headless)
+        driver = webdriver.Chrome(options=options)
+        print("✅ Đã khởi tạo Chrome driver")
+        
+        # Áp dụng stealth mode nếu có
+        if USE_STEALTH:
+            stealth(driver,
+                languages=["vi-VN", "vi", "en-US", "en"],
+                vendor="Google Inc.",
+                platform="Win32",
+                webgl_vendor="Intel Inc.",
+                renderer="Intel Iris OpenGL Engine",
+                fix_hairline=True,
+            )
+            print("✅ Đã áp dụng stealth mode")
         
         wait = WebDriverWait(driver, 30)
         
